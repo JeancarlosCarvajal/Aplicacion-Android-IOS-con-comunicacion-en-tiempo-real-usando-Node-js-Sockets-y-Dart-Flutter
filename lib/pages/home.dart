@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:a_brand_names/models/band.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -32,24 +35,113 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         elevation: 1,
-        onPressed: () {
+        onPressed: addNewBar,
+        child: const Icon(Icons.add),
+      //    () {
         
-      },
-        child: const Icon(Icons.add),),
+      // },
+      ),
     );
   }
 
-  ListTile _bandTitle(Band band) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: Colors.blue[100],
-        child: Text(band.name.substring(0,2)),
-      ),
-      title: Text(band.name),
-      trailing: Text('${band.votes}', style: TextStyle(fontSize: 20)),
-      onTap: (){
-        print(band.name);
+  Widget _bandTitle(Band band) {
+    return Dismissible(
+      key: UniqueKey(),// tenia Key(band.id)
+      direction: DismissDirection.startToEnd,
+      onDismissed: (direction){
+        print('direction: $direction');
+        print('direction: ${band.id}');
+        // TODO llamar y borrar del server
       },
+      background: Container(
+        padding: const EdgeInsets.only(left: 8),
+        color: Colors.red,
+        child: const Align(
+          alignment: Alignment.centerLeft,
+          child: Text('Delete Band', style: TextStyle(color: Colors.white))
+        ),
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Colors.blue[100],
+          child: Text(band.name.substring(0,2)),
+        ),
+        title: Text(band.name),
+        trailing: Text('${band.votes}', style: const TextStyle(fontSize: 20)),
+        onTap: (){
+          print(band.name);
+        },
+      ),
     );
+  }
+
+
+
+  addNewBar(){
+    print('Mostrando Dialogo de texto');
+
+    // para controlar lo que se escribe
+    final TextEditingController textController = new TextEditingController();
+
+    if(Platform.isAndroid){
+      // Android
+      return showDialog(
+        context: context, 
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('New Band Name'),
+            content: TextField(
+              controller: textController,
+            ),
+            actions: [
+              MaterialButton(
+                elevation: 5,
+                textColor: Colors.blue,
+                onPressed: () => addBarToList(textController.text),
+                child: const Text('Add')
+              )
+            ],
+          );
+        }
+      );
+    }
+
+    // sino es android corre este codigo para IOS
+    showCupertinoDialog(
+      context: context, 
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: const Text('New Band Name'),
+          content: CupertinoTextField(
+            controller: textController,
+          ),
+          actions: [
+            // en IOS se hace click afuera y no se cierra el dialogo por lo tanto se debe colorcar otro boton para cerrar
+            CupertinoDialogAction(
+              isDefaultAction: true, // se mira mejor la accion del boton
+              child: Text('Add'),
+              onPressed: () => addBarToList(textController.text),
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true, // se mira mejor la accion del boton
+              child: Text('Dismiss'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+  void addBarToList( String name ){
+    print(name);
+    if( name.length > 1 ){
+      // podemos agregarlo al sockets
+      this.bands.add(new Band(id: DateTime.now().toString(), name: name, votes: null));
+      setState(() { });
+
+    }
+    // para cerrar el dialogo
+    Navigator.pop(context);
   }
 }

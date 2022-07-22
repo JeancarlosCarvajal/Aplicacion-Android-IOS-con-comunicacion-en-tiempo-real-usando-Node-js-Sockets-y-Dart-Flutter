@@ -7,12 +7,12 @@ class Band {
 
   late String name;
 
-  late int votes;
+  late int? votes;
 
   Band({
     required this.id,
     required this.name,
-    required this.votes
+    this.votes
   });
 
 
