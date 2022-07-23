@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+
+
+	<!--android:usesCleartextTraffic="true" para trabajar con http en localhost sockets
+	https://stackoverflow.com/questions/64172791/flutter-insecure-http-is-not-allowed-by-platform/65730723#65730723 -->
+	<key>NSAppTransportSecurity</key>
+	<dict><key>NSAllowsArbitraryLoads</key><true/></dict>
+
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

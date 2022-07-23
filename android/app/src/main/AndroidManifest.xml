@@ -1,10 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.a_brand_names">
    <application
+        android:usesCleartextTraffic="true"
         android:label="a_brand_names"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <activity
+        <!--android:usesCleartextTraffic="true" para trabajar con http en localhost sockets
+        https://stackoverflow.com/questions/64172791/flutter-insecure-http-is-not-allowed-by-platform/65730723#65730723 -->
+        <activity 
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
