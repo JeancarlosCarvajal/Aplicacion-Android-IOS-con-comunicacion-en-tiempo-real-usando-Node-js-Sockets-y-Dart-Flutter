@@ -24,9 +24,5 @@ class Band {
       votes: obj['votes']
     );
 
-
-
-
-
-
+ 
 }
