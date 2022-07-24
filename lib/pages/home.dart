@@ -26,18 +26,23 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     final socketService = Provider.of<SocketService>(context, listen: false);
-    socketService.socket.on('active-bands', (payload){
-      print(payload);
-      this.bands = (payload as List) // no se sabe que retorna pero con payload as List se establece una lista
-        .map((band) => Band.fromMap(band)) // la lista tiene elementos que son mapas, y lo convertimos cada uno en una Banda
-        .toList(); // lo llevamos a to list. para llevar de mapa a lista iterable en Flutter
 
-      // redibujamos el widgte para obtener la lista de bandas desde el sockets
-      setState(() {});
-    });
+    // escucha las bandas activas
+    socketService.socket.on('active-bands', _andleActiveBands);
+    
     super.initState();
   }
-  
+
+  void _andleActiveBands(dynamic payload){
+    print(payload);
+    this.bands = (payload as List) // no se sabe que retorna pero con payload as List se establece una lista
+      .map((band) => Band.fromMap(band)) // la lista tiene elementos que son mapas, y lo convertimos cada uno en una Banda
+      .toList(); // lo llevamos a to list. para llevar de mapa a lista iterable en Flutter
+
+    // redibujamos el widgte para obtener la lista de bandas desde el sockets
+    setState(() {});
+  }
+
   @override
   void dispose() {
     // hacer una limpieza
@@ -86,12 +91,13 @@ class _HomePageState extends State<HomePage> {
     return Dismissible(
       key: UniqueKey(),// tenia Key(band.id)
       direction: DismissDirection.startToEnd,
-      onDismissed: (_){ 
-        print('Borrar : ${band.id}');
-        //  llamar y borrar del server
-        socketService.emit('delete-band', { 'id': band.id } );
-        setState(() { });
-      },
+      onDismissed: (_) => socketService.emit('delete-band', { 'id': band.id }), // codigo optimizado
+      // onDismissed: (_){ // codigo no optimizado
+      //   print('Borrar : ${band.id}');
+      //   //  llamar y borrar del server
+      //   socketService.emit('delete-band', { 'id': band.id } );
+      //   // setState(() { });
+      // },
       background: Container(
         padding: const EdgeInsets.only(left: 8),
         color: Colors.red,
@@ -107,11 +113,12 @@ class _HomePageState extends State<HomePage> {
         ),
         title: Text(band.name),
         trailing: Text('${band.votes}', style: const TextStyle(fontSize: 20)),
-        onTap: (){
-          print(band.id);
-          socketService.emit('vote-band', { 'id': band.id });
-          setState(() {});
-        },
+        onTap: () => socketService.emit('vote-band', { 'id': band.id }), // codigo optimizado
+        // onTap: (){ // NO optimizado
+        //   print(band.id);
+        //   socketService.emit('vote-band', { 'id': band.id });
+        //   setState(() {});
+        // },
       ),
     );
   }
@@ -128,30 +135,28 @@ class _HomePageState extends State<HomePage> {
       // Android
       return showDialog(
         context: context, 
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('New Band Name'),
-            content: TextField(
-              controller: textController,
-            ),
-            actions: [
-              MaterialButton(
-                elevation: 5,
-                textColor: Colors.blue,
-                onPressed: () => addBarToList(textController.text),
-                child: const Text('Add')
-              )
-            ],
-          );
-        }
+        builder: (_) => AlertDialog( // codigo optimizado
+          title: const Text('New Band Name'),
+          content: TextField(
+            controller: textController,
+          ),
+          actions: [
+            MaterialButton(
+              elevation: 5,
+              textColor: Colors.blue,
+              onPressed: () => addBarToList(textController.text),
+              child: const Text('Add')
+            )
+          ],
+        )
       );
     }
 
     // sino es android corre este codigo para IOS
     showCupertinoDialog(
       context: context, 
-      builder: (context) {
-        return CupertinoAlertDialog(
+      builder: (_) {
+        return CupertinoAlertDialog( // codigo NO optimizado, lo deje asi de muestra comparalo con el de Android
           title: const Text('New Band Name'),
           content: CupertinoTextField(
             controller: textController,
