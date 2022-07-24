@@ -4,6 +4,7 @@ import 'package:a_brand_names/models/band.dart';
 import 'package:a_brand_names/services/socket_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:pie_chart/pie_chart.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -54,6 +55,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+
     final socketService = Provider.of<SocketService>(context);
 
     return Scaffold(
@@ -70,9 +72,25 @@ class _HomePageState extends State<HomePage> {
           )
         ],
       ),
-      body: ListView.builder(
-        itemCount: bands.length,
-        itemBuilder: (context, index) => _bandTitle(bands[index])
+      body: Column(
+        children: [
+
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+            width: double.infinity,
+            height: 200,
+            child: _showGraph(bands)
+          ),
+
+          Expanded( // es necesario el expanded para que no de error y tome el tamano que necesite
+            child: ListView.builder(
+              itemCount: bands.length,
+              itemBuilder: (context, index) => _bandTitle(bands[index])
+            ),
+          ),
+
+
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         elevation: 1,
@@ -192,4 +210,59 @@ class _HomePageState extends State<HomePage> {
     // para cerrar el dialogo
     Navigator.pop(context);
   }
+}
+
+Widget _showGraph(List<Band> bands) {
+  // Map<String, double> dataMap = { // este es el ejemplo del paquete ... https://pub.dev/packages/pie_chart
+    // "Flutter": 5,
+    // "React": 3,
+    // "Xamarin": 2,
+    // "Ionic": 2, 
+  // };  
+
+  Map<String, double> dataMap = {};
+  for (var band in bands) {
+    dataMap[band.name] = band.votes!.toDouble();
+  }
+  // bands.forEach((band) { // otra forma de hacerlo
+  //   dataMap.putIfAbsent(band.name, () => band.votes!.toDouble());
+  // });
+  List <Color> colorList = [
+    Colors.amber,
+    Colors.blue,
+    Colors.pink,
+    Colors.purple,
+    Colors.black,
+    Colors.green,
+    Colors.deepOrangeAccent,
+    Colors.indigo
+  ];
+  return dataMap.isNotEmpty 
+    ? PieChart(
+      dataMap: dataMap,
+      animationDuration: const Duration(milliseconds: 800),
+      chartLegendSpacing: 32,
+      colorList: colorList,
+      initialAngleInDegree: 0,
+      chartType: ChartType.ring,
+      ringStrokeWidth: 25,
+      centerText: "Votaciones",
+      legendOptions: const LegendOptions(
+        showLegendsInRow: false,
+        legendPosition: LegendPosition.right,
+        showLegends: true,
+        legendShape: BoxShape.circle,
+        legendTextStyle: TextStyle(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      chartValuesOptions: const ChartValuesOptions(
+        showChartValueBackground: true,
+        showChartValues: true,
+        showChartValuesInPercentage: true,
+        showChartValuesOutside: true,
+        decimalPlaces: 0,
+      ),  
+    ) 
+    : Container();  
 }
