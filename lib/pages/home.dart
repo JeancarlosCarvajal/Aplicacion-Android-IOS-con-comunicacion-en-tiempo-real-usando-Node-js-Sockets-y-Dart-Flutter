@@ -17,11 +17,35 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   List<Band> bands = [
-    Band(id: '1', name: 'Metalica', votes: 5),
-    Band(id: '2', name: 'Queen', votes: 2),
-    Band(id: '3', name: 'Heroes del Silencio', votes: 2),
-    Band(id: '4', name: 'Bon Jovi', votes: 5),
+    // Band(id: '1', name: 'Metalica', votes: 5),
+    // Band(id: '2', name: 'Queen', votes: 2),
+    // Band(id: '3', name: 'Heroes del Silencio', votes: 2),
+    // Band(id: '4', name: 'Bon Jovi', votes: 5),
   ];
+
+  @override
+  void initState() {
+    final socketService = Provider.of<SocketService>(context, listen: false);
+    socketService.socket.on('active-bands', (payload){
+      print(payload);
+      this.bands = (payload as List) // no se sabe que retorna pero con payload as List se establece una lista
+        .map((band) => Band.fromMap(band)) // la lista tiene elementos que son mapas, y lo convertimos cada uno en una Banda
+        .toList(); // lo llevamos a to list. para llevar de mapa a lista iterable en Flutter
+
+      // redibujamos el widgte para obtener la lista de bandas desde el sockets
+      setState(() {});
+    });
+    super.initState();
+  }
+  
+  @override
+  void dispose() {
+    // hacer una limpieza
+    // eliminar la conexion a bandas cuando ya no lo necesite
+    final socketService = Provider.of<SocketService>(context, listen: false);
+    socketService.socket.off('active-bands');
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,13 +81,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _bandTitle(Band band) {
+    final socketService = Provider.of<SocketService>(context, listen: false);
+
     return Dismissible(
       key: UniqueKey(),// tenia Key(band.id)
       direction: DismissDirection.startToEnd,
-      onDismissed: (direction){
-        print('direction: $direction');
-        print('direction: ${band.id}');
-        // TODO llamar y borrar del server
+      onDismissed: (_){ 
+        print('Borrar : ${band.id}');
+        //  llamar y borrar del server
+        socketService.emit('delete-band', { 'id': band.id } );
+        setState(() { });
       },
       background: Container(
         padding: const EdgeInsets.only(left: 8),
@@ -81,7 +108,9 @@ class _HomePageState extends State<HomePage> {
         title: Text(band.name),
         trailing: Text('${band.votes}', style: const TextStyle(fontSize: 20)),
         onTap: (){
-          print(band.name);
+          print(band.id);
+          socketService.emit('vote-band', { 'id': band.id });
+          setState(() {});
         },
       ),
     );
@@ -149,7 +178,9 @@ class _HomePageState extends State<HomePage> {
     print(name);
     if( name.length > 1 ){
       // podemos agregarlo al sockets
-      this.bands.add(new Band(id: DateTime.now().toString(), name: name, votes: null));
+      // this.bands.add(new Band(id: DateTime.now().toString(), name: name, votes: null)); // tenia en duro para pruebas
+      final socketService = Provider.of<SocketService>(context, listen: false);
+      socketService.emit('add-band', { 'name': name });
       setState(() { });
 
     }
